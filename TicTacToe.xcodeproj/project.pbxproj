@@ -23,6 +23,8 @@
 		B8A52CC916B9B74F00547495 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B8A52CA416B9B74F00547495 /* Foundation.framework */; };
 		B8A52CD116B9B74F00547495 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = B8A52CCF16B9B74F00547495 /* InfoPlist.strings */; };
 		B8A52CD416B9B74F00547495 /* TicTacToeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = B8A52CD316B9B74F00547495 /* TicTacToeTests.m */; };
+		B8A52CDF16B9B76500547495 /* T3Game.m in Sources */ = {isa = PBXBuildFile; fileRef = B8A52CDE16B9B76500547495 /* T3Game.m */; };
+		B8A52CE016B9B76500547495 /* T3Game.m in Sources */ = {isa = PBXBuildFile; fileRef = B8A52CDE16B9B76500547495 /* T3Game.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -58,6 +60,8 @@
 		B8A52CD016B9B74F00547495 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		B8A52CD216B9B74F00547495 /* TicTacToeTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TicTacToeTests.h; sourceTree = "<group>"; };
 		B8A52CD316B9B74F00547495 /* TicTacToeTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TicTacToeTests.m; sourceTree = "<group>"; };
+		B8A52CDD16B9B76500547495 /* T3Game.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = T3Game.h; sourceTree = "<group>"; };
+		B8A52CDE16B9B76500547495 /* T3Game.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = T3Game.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -122,6 +126,8 @@
 				B8A52CBA16B9B74F00547495 /* MainStoryboard.storyboard */,
 				B8A52CBD16B9B74F00547495 /* T3ViewController.h */,
 				B8A52CBE16B9B74F00547495 /* T3ViewController.m */,
+				B8A52CDD16B9B76500547495 /* T3Game.h */,
+				B8A52CDE16B9B76500547495 /* T3Game.m */,
 				B8A52CA916B9B74F00547495 /* Supporting Files */,
 			);
 			path = TicTacToe;
@@ -274,6 +280,7 @@
 				B8A52CAF16B9B74F00547495 /* main.m in Sources */,
 				B8A52CB316B9B74F00547495 /* T3AppDelegate.m in Sources */,
 				B8A52CBF16B9B74F00547495 /* T3ViewController.m in Sources */,
+				B8A52CDF16B9B76500547495 /* T3Game.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -282,6 +289,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B8A52CD416B9B74F00547495 /* TicTacToeTests.m in Sources */,
+				B8A52CE016B9B76500547495 /* T3Game.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -446,6 +454,7 @@
 				B8A52CD916B9B74F00547495 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		B8A52CDA16B9B74F00547495 /* Build configuration list for PBXNativeTarget "TicTacToeTests" */ = {
 			isa = XCConfigurationList;
@@ -454,6 +463,7 @@
 				B8A52CDC16B9B74F00547495 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
