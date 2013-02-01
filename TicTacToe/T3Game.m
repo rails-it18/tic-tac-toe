@@ -47,6 +47,16 @@
     return board;
 }
 
+- (T3Player)playerOccupyingRow:(NSUInteger)row col:(NSUInteger)col
+{
+    if (row >= 3 || col >= 3) {
+        NSAssert(0, @"Requested square out of bounds.");
+        return T3PlayerNone;
+    }
+    
+    return _board[row][col];
+}
+
 #pragma mark - Game Actions
 
 - (void)resetGame

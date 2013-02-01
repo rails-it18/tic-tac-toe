@@ -40,4 +40,6 @@ typedef enum {
 //  on behalf of the player whose turn it is.
 - (void)playSquareOnRow:(NSUInteger)row col:(NSUInteger)col;
 
+- (T3Player)playerOccupyingRow:(NSUInteger)row col:(NSUInteger)col;
+
 @end
