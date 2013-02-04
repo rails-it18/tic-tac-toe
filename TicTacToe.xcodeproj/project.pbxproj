@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		B82F102316BC720700FFAB65 /* board.png in Resources */ = {isa = PBXBuildFile; fileRef = B82F102116BC720700FFAB65 /* board.png */; };
 		B82F102416BC720700FFAB65 /* board@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B82F102216BC720700FFAB65 /* board@2x.png */; };
+		B82F102716BC746E00FFAB65 /* T3ComputerPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = B82F102616BC746E00FFAB65 /* T3ComputerPlayer.m */; };
+		B82F102816BC746E00FFAB65 /* T3ComputerPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = B82F102616BC746E00FFAB65 /* T3ComputerPlayer.m */; };
 		B8A52CA316B9B74F00547495 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B8A52CA216B9B74F00547495 /* UIKit.framework */; };
 		B8A52CA516B9B74F00547495 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B8A52CA416B9B74F00547495 /* Foundation.framework */; };
 		B8A52CA716B9B74F00547495 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B8A52CA616B9B74F00547495 /* CoreGraphics.framework */; };
@@ -42,6 +44,8 @@
 /* Begin PBXFileReference section */
 		B82F102116BC720700FFAB65 /* board.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = board.png; sourceTree = "<group>"; };
 		B82F102216BC720700FFAB65 /* board@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "board@2x.png"; sourceTree = "<group>"; };
+		B82F102516BC746E00FFAB65 /* T3ComputerPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = T3ComputerPlayer.h; sourceTree = "<group>"; };
+		B82F102616BC746E00FFAB65 /* T3ComputerPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = T3ComputerPlayer.m; sourceTree = "<group>"; };
 		B8A52C9E16B9B74F00547495 /* TicTacToe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TicTacToe.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B8A52CA216B9B74F00547495 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		B8A52CA416B9B74F00547495 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -134,6 +138,8 @@
 				B8A52CBE16B9B74F00547495 /* T3ViewController.m */,
 				B8A52CDD16B9B76500547495 /* T3Game.h */,
 				B8A52CDE16B9B76500547495 /* T3Game.m */,
+				B82F102516BC746E00FFAB65 /* T3ComputerPlayer.h */,
+				B82F102616BC746E00FFAB65 /* T3ComputerPlayer.m */,
 				B8A52CA916B9B74F00547495 /* Supporting Files */,
 			);
 			path = TicTacToe;
@@ -289,6 +295,7 @@
 				B8A52CB316B9B74F00547495 /* T3AppDelegate.m in Sources */,
 				B8A52CBF16B9B74F00547495 /* T3ViewController.m in Sources */,
 				B8A52CDF16B9B76500547495 /* T3Game.m in Sources */,
+				B82F102716BC746E00FFAB65 /* T3ComputerPlayer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -298,6 +305,7 @@
 			files = (
 				B8A52CD416B9B74F00547495 /* TicTacToeTests.m in Sources */,
 				B8A52CE016B9B76500547495 /* T3Game.m in Sources */,
+				B82F102816BC746E00FFAB65 /* T3ComputerPlayer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

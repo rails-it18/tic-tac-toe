@@ -8,6 +8,7 @@
 
 #import "T3ViewController.h"
 #import "T3Game.h"
+#import "T3ComputerPlayer.h"
 
 static void* kObservationContext = &kObservationContext;
 
@@ -23,6 +24,7 @@ static NSUInteger kColCount = 3;
 @property (strong, nonatomic) NSArray *gameBoardButtons;
 
 @property (strong, nonatomic) T3Game *game;
+@property (strong, nonatomic) T3ComputerPlayer *computerPlayer;
 
 @end
 
@@ -34,10 +36,11 @@ static NSUInteger kColCount = 3;
 {
     [super viewDidLoad];
     
-    // Initialize the game
+    // Initialize the game and computer player.
     _game = [[T3Game alloc] init];
+    _computerPlayer = [[T3ComputerPlayer alloc] init];
     
-    // Observe stuff
+    // Start observations
     [self.game addObserver:self
                 forKeyPath:@"currentPlayer"
                    options:0
@@ -66,6 +69,9 @@ static NSUInteger kColCount = 3;
     }
     
     self.gameBoardButtons = boardButtons;
+    
+    // Start the first game.
+    [self startHumanComputerGameWithComputerAsPlayer:T3PlayerO];
 }
 
 - (void)viewDidLayoutSubviews
@@ -100,6 +106,8 @@ static NSUInteger kColCount = 3;
     
     [_gameBoardView release];
     [_gameBoardButtons release];
+    
+    [_computerPlayer release];
     [_game release];
     
     [super dealloc];
@@ -135,8 +143,6 @@ static NSUInteger kColCount = 3;
     [button setTitle:title forState:UIControlStateNormal];
 }
 
-#pragma mark - Game interaction
-
 - (void)boardButtonTapped:(id)sender
 {
     if (![sender isKindOfClass:[UIButton class]]) {
@@ -153,7 +159,20 @@ static NSUInteger kColCount = 3;
     }
     
     [self.game playSquareOnRow:row col:col];
-    [self refreshSquareAtRow:row col:col];
+}
+
+- (void)startHumanHumanGame
+{
+    [self.computerPlayer stopPlaying];
+    [self.game resetGame];
+}
+
+- (void)startHumanComputerGameWithComputerAsPlayer:(T3Player)computerPlayer;
+{
+    [self.computerPlayer stopPlaying];
+    [self.game resetGame];
+    [self refreshBoard];
+    [self.computerPlayer startPlayingGame:self.game asPlayer:computerPlayer];
 }
 
 #pragma mark - KVO
@@ -170,7 +189,9 @@ static NSUInteger kColCount = 3;
     }
     
     if ([keyPath isEqualToString:@"currentPlayer"]) {
-        //TODO
+        // If the current player changes, we know that a
+        //  move was played and the board needs to be updated.
+        [self refreshBoard];
     }
     else if ([keyPath isEqualToString:@"isGameOver"]) {
         if (!self.game.isGameOver) {
@@ -189,22 +210,27 @@ static NSUInteger kColCount = 3;
             }
         }();
         
+        NSString *newGameXTitle = NSLocalizedString(@"New Game as X", nil);
+        NSString *newGameOTitle = NSLocalizedString(@"New Game as O", nil);
         UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:title
                                                             message:message
                                                            delegate:self
                                                   cancelButtonTitle:nil
-                                                  otherButtonTitles:NSLocalizedString(@"New Game", nil), nil];
+                                                  otherButtonTitles:newGameXTitle, newGameOTitle, nil];
         [alertView show];
     }
 }
 
-#pragma mark - Alert View Delegate
+#pragma mark - New Game UI
 
 - (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex
 {
     // The only way this can be called is if the user tapped the "New Game" button in an alert view.
     [self.game resetGame];
     [self refreshBoard];
+    
+    T3Player computerPlayer = (buttonIndex == 0) ? T3PlayerO : T3PlayerX;
+    [self startHumanComputerGameWithComputerAsPlayer:computerPlayer];
 }
 
 @end

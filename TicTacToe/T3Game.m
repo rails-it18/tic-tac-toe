@@ -16,6 +16,7 @@
 @property (nonatomic, readwrite) T3Player currentPlayer;
 @property (nonatomic, readwrite) BOOL isGameOver;
 @property (nonatomic, readwrite) T3Player winner;
+@property (nonatomic, readwrite) NSUInteger occupiedSquareCount;
 
 @end
 
@@ -61,11 +62,15 @@
 
 - (void)resetGame
 {
+    [self willChangeValueForKey:@"gameBoard"];
     for (NSUInteger row = 0; row < 3; ++row) {
         for (NSUInteger col = 0; col < 3; ++col) {
             _board[row][col] = T3PlayerNone;
         }
     }
+    [self didChangeValueForKey:@"gameBoard"];
+
+    self.occupiedSquareCount = 0;
     self.currentPlayer = T3PlayerX;
     self.isGameOver = NO;
     self.winner = T3PlayerNone;
@@ -88,7 +93,11 @@
     }
     
     // Populate the square
+    [self willChangeValueForKey:@"gameBoard"];
     _board[row][col] = self.currentPlayer;
+    [self didChangeValueForKey:@"gameBoard"];
+    
+    ++self.occupiedSquareCount;
     
     // Determine whether the game is over.
     

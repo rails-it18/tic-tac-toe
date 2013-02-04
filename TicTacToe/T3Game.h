@@ -33,6 +33,8 @@ typedef enum {
 // This is primarily for testing purposes.
 @property (nonatomic, readonly) NSArray *gameBoard;
 
+@property (nonatomic, readonly) NSUInteger occupiedSquareCount;
+
 // Resets the game.
 - (void)resetGame;
 
