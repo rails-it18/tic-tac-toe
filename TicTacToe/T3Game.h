@@ -14,6 +14,11 @@ typedef enum {
     T3PlayerO
 } T3Player;
 
+extern NSString *const T3TurnTakenInGameNotification;
+extern NSString *const T3TurnPlayerKey;
+extern NSString *const T3TurnRowKey;
+extern NSString *const T3TurnColKey;
+
 @interface T3Game : NSObject
 
 // The player whose turn it is, or T3PlayerNone if the game is over.

@@ -71,7 +71,7 @@ static NSUInteger kColCount = 3;
     self.gameBoardButtons = boardButtons;
     
     // Start the first game.
-    [self startHumanComputerGameWithComputerAsPlayer:T3PlayerO];
+    [self startHumanComputerGameWithComputerAsPlayer:T3PlayerX];
 }
 
 - (void)viewDidLayoutSubviews
@@ -147,6 +147,11 @@ static NSUInteger kColCount = 3;
 {
     if (![sender isKindOfClass:[UIButton class]]) {
         NSAssert(0, @"Unexpected sender");
+        return;
+    }
+    
+    if (self.game.currentPlayer == self.computerPlayer.player) {
+        // It's the computer's turn.
         return;
     }
     

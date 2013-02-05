@@ -8,6 +8,11 @@
 
 #import "T3Game.h"
 
+NSString *const T3TurnTakenInGameNotification = @"T3TurnTakenInGameNotification";
+NSString *const T3TurnPlayerKey = @"T3TurnPlayerKey";
+NSString *const T3TurnRowKey = @"T3TurnRowKey";
+NSString *const T3TurnColKey = @"T3TurnColKey";
+
 @interface T3Game () {
     T3Player _board[3][3];
 }
@@ -96,6 +101,15 @@
     [self willChangeValueForKey:@"gameBoard"];
     _board[row][col] = self.currentPlayer;
     [self didChangeValueForKey:@"gameBoard"];
+    
+    NSDictionary *notificationUserInfo = @{
+        T3TurnPlayerKey : @(self.currentPlayer),
+        T3TurnRowKey : @(row),
+        T3TurnColKey : @(col)
+    };
+    [[NSNotificationCenter defaultCenter] postNotificationName:T3TurnTakenInGameNotification
+                                                        object:self
+                                                      userInfo:notificationUserInfo];
     
     ++self.occupiedSquareCount;
     
