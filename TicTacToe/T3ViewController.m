@@ -71,7 +71,7 @@ static NSUInteger kColCount = 3;
     self.gameBoardButtons = boardButtons;
     
     // Start the first game.
-    [self startHumanComputerGameWithComputerAsPlayer:T3PlayerX];
+    [self startHumanComputerGameWithComputerAsPlayer:T3PlayerO];
 }
 
 - (void)viewDidLayoutSubviews

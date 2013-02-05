@@ -10,6 +10,14 @@
 
 static void *kObservationContext = &kObservationContext;
 
+typedef enum {
+    T3PerspectiveTransformationFlipDiagonally,
+    T3PerspectiveTransformationFlipHorizontally,
+    T3PerspectiveTransformationRotate1,
+    T3PerspectiveTransformationRotate2,
+    T3PerspectiveTransformationRotate3
+} T3PerspectiveTransformation;
+
 @interface T3ComputerPlayer ()
 
 @property (nonatomic, strong) T3Game *game;
@@ -19,10 +27,7 @@ static void *kObservationContext = &kObservationContext;
 
 // Tracks whether the game is currently flipping the rows/cols
 //  to look at the possible moves.
-@property (nonatomic) BOOL usingFlippedPerspective;
-
-@property (nonatomic) BOOL diagonalPerspectiveEvaluated;
-@property (nonatomic) BOOL rotationalPerspectiveEvaluated;
+@property (nonatomic, strong) NSMutableArray *perspectiveTransformations;
 
 @end
 
@@ -35,9 +40,7 @@ static void *kObservationContext = &kObservationContext;
     self = [super init];
     if (self) {
         _player = T3PlayerNone;
-        _usingFlippedPerspective = NO;
-        _diagonalPerspectiveEvaluated = NO;
-        _rotationalPerspectiveEvaluated = NO;
+        _perspectiveTransformations = [[NSMutableArray alloc] init];
     }
     return self;
 }
@@ -47,14 +50,13 @@ static void *kObservationContext = &kObservationContext;
     [_game removeObserver:self forKeyPath:@"currentPlayer"];
     [_game release];
     
+    [_perspectiveTransformations release];
+    
     [super dealloc];
 }
 
 #pragma mark - Static properties
 
-// The board is guaranteed to be assymetrical about the
-//  diagonal (where row == col) after the first response
-//  as X.
 + (NSArray *)optimalMoveTreeForPlayerX
 {
     id null = [NSNull null];
@@ -64,10 +66,10 @@ static void *kObservationContext = &kObservationContext;
     //  to win (via forking) by using the following subtree of moves.
     id commonFork = @[@010, @{
                         @020 : @[@011, @{
-                            @022 : @012, // win
-                            null : @022 // win
+                            @022 : @[@012], // win
+                            null : @[@022] // win
                         }],
-                        null : @020 // win
+                        null : @[@020] // win
                     }];
     
     return @[@000, @{
@@ -75,17 +77,17 @@ static void *kObservationContext = &kObservationContext;
         @002 : commonFork,
         @012 : @[@011, @{
             @022 : @[@002, @{
-                @020 : @001, // win
-                null : @020 // win
+                @020 : @[@001], // win
+                null : @[@020] // win
             }],
-            null : @022 // win
+            null : @[@022] // win
         }],
         @022 : @[@002, @{
             @001 : @[@020, @{
-                @011 : @010, // win
-                null : @011 // win
+                @011 : @[@010], // win
+                null : @[@011] // win
             }],
-            null : @001 // win
+            null : @[@001] // win
         }],
     
         // O's only safe response
@@ -93,11 +95,14 @@ static void *kObservationContext = &kObservationContext;
             // O must block X's win
             @002 : @[@020, @{
                 // O must block X's win
-                @010 : @012, // draw no matter where O moves
-                null : @010 // win
+                @010 : @[@012], // draw no matter where O moves
+                null : @[@010] // win
             }],
-            null : @002 // win
+            null : @[@002] // win
         }],
+    
+        // Otherwise, we need to flip our perspective diagonally
+        null : @(T3PerspectiveTransformationFlipDiagonally)
     }];
 }
 
@@ -111,35 +116,38 @@ static void *kObservationContext = &kObservationContext;
             // X in Top-middle. Block X's top-row win
             @001 : @[@002, @{
                 @020 : @[@010, @{
-                    @012 : @022, // draw
-                    null : @012 // win
+                    @012 : @[@022], // draw
+                    null : @[@012] // win
                 }],
-                null : @020 // win
+                null : @[@020] // win
             }],
             // X in Top-right. Block X's top-row win
             @002 : @[@001, @{
                 @021 : @[@010, @{
-                    @012 : @022, // draw
-                    null : @012 // win
+                    @012 : @[@022], // draw
+                    null : @[@012] // win
                 }],
-                null : @021 // win
+                null : @[@021] // win
             }],
             // X in Middle-right. Create a middle-column threat
             @012 : @[@001, @{
                 @021 : @[@020, @{
-                    @002 : @022, // draw
-                    null : @002 // win
+                    @002 : @[@022], // draw
+                    null : @[@002] // win
                 }],
-                null : @021 // win
+                null : @[@021] // win
             }],
             // X in Bottom-right. Create a middle-column threat
             @022 : @[@001, @{
                 @021 : @[@020, @{
-                    @002 : @012, // draw
-                    null : @002 // win
+                    @002 : @[@012], // draw
+                    null : @[@002] // win
                 }],
-                null : @021 // win
-            }]
+                null : @[@021] // win
+            }],
+    
+            // Otherwise, we need a perspective change
+            null : @(T3PerspectiveTransformationFlipDiagonally)
         }],
     
         // X Starts in top-middle. Respond with O in the middle.
@@ -147,38 +155,106 @@ static void *kObservationContext = &kObservationContext;
             // X in top-right. Block X's top-row win
             @002 : @[@000, @{
                 @022 : @[@012, @{
-                    @010 : @020, // draw
-                    null : @010 // win
+                    @010 : @[@020], // draw
+                    null : @[@010] // win
                 }],
-                null : @022 // win
+                null : @[@022] // win
             }],
             // X in middle-right. Create a diagonal threat.
             @012 : @[@002, @{
                 @020 : @[@000, @{
-                    @022 : @021, // draw
-                    null : @022 // win
+                    @022 : @[@021], // draw
+                    null : @[@022] // win
                 }],
-                null : @020 // win
+                null : @[@020] // win
             }],
             // X in bottom-right. Create a middle-row threat.
             @022 : @[@012, @{
                 @010 : @[@020, @{
-                    @002 : @000, // draw
-                    null : @002 // win
+                    @002 : @[@000], // draw
+                    null : @[@002] // win
                 }],
-                null : @010 // win
+                null : @[@010] // win
             }],
             // X in bottom-middle. We can fork the opponent.
-            @022 : @[@012, @{
+            @021 : @[@012, @{
                 @010 : @[@022, @{
-                    @000 : @002, // win
-                    null : @000 // win
+                    @000 : @[@002], // win
+                    null : @[@000] // win
                 }],
-                null : @010 // win
+                null : @[@010] // win
             }],
     
-            //TODO: Handle left column by flipping perspective horizontally
-        }]
+            // Handle left column by flipping perspective horizontally
+            null : @(T3PerspectiveTransformationFlipHorizontally)
+        }],
+    
+        // X starts in the middle. Respond with O in the top-left
+        @011 : @[@000, @{
+            // X in the top-middle. Block X's middle-column threat
+            @001 : @[@021, @{
+                // X in the top-right. We can fork the opponent
+                @002 : @[@020, @{
+                    @010 : @[@022], // win
+                    null : @[@010] // win
+                }],
+                // X in the middle-right. Block the middle-row threat
+                @012 : @[@010, @{
+                    @020 : @[@002], // draw
+                    null : @[@020] // win
+                }],
+                // X in the bottom-right. Create a left-column threat
+                @022 : @[@010, @{
+                    @020 : @[@002], // draw
+                    null : @[@020] // win
+                }],
+                // X in the middle-left. Block the middle-row threat and force a draw
+                @010 : @[@012, @{
+                    @002 : @[@020], // draw
+                    null : @[@002] // draw
+                }],
+                // X in the bottom-left. Block the diagonal threat and force a draw
+                @020 : @[@002, @{
+                    @010 : @[@012], // draw
+                    null : @[@010] // draw
+                }]
+            }],
+            // X in the top-right. Block the diagonal threat
+            @002 : @[@020, @{
+                @010 : @[@012, @{
+                    @001 : @[@021], // draw
+                    null : @[@001] // draw
+                }],
+                null : @[@010] // win
+            }],
+            // X in the middle-right. Block the horizontal threat
+            @012 : @[@010, @{
+                @020 : @[@002, @{
+                    @001 : @[@021], // draw
+                    null : @[@001] // win
+                }],
+                null : @[@020] // win
+            }],
+            // X in the bottom-right. Create a left-column threat
+            @022 : @[@020, @{
+                @010 : @[@012, @{
+                    @001 : @[@021], // draw
+                    null : @[@001] // draw
+                }],
+                null : @[@010] // win
+            }],
+    
+            // Otherwise, we need a perspective change
+            null : @(T3PerspectiveTransformationFlipDiagonally)
+        }],
+    
+        // Any other moves by X require a perspective change.
+        @010 : @(T3PerspectiveTransformationRotate1),
+        @020 : @(T3PerspectiveTransformationRotate1),
+        @021 : @(T3PerspectiveTransformationRotate2),
+        @022 : @(T3PerspectiveTransformationRotate2),
+        @012 : @(T3PerspectiveTransformationRotate3),
+        @002 : @(T3PerspectiveTransformationRotate3)
     };
 }
 
@@ -219,9 +295,7 @@ static void *kObservationContext = &kObservationContext;
 {
     self.game = nil;
     self.player = T3PlayerNone;
-    self.usingFlippedPerspective = NO;
-    self.diagonalPerspectiveEvaluated = NO;
-    self.rotationalPerspectiveEvaluated = NO;
+    [self.perspectiveTransformations removeAllObjects];
 }
 
 - (BOOL)takeTurnFromMappedValue:(NSUInteger)value
@@ -272,7 +346,7 @@ static void *kObservationContext = &kObservationContext;
     }
     
     // Oops. We have to just take any blind turn...
-    NSLog(@"Computer is sad. It lost track of the game.");
+    NSLog(@"Computer is confused. :(");
     
     if (![self.game playerOccupyingRow:1 col:1]) {
         // If the center square is not occupied, play that first.
@@ -289,14 +363,14 @@ static void *kObservationContext = &kObservationContext;
     self.nextResponseMap = nil;
     
     if (tree.count == 0) {
-        NSAssert(0, @"Computer is sad. It lost track of the game.");
+        NSAssert(0, @"Computer is confused. :(");
         [self takeAnyTurn];
         return;
     }
     
     NSUInteger valForMove = [[tree objectAtIndex:0] unsignedIntegerValue];
     if (![self takeTurnFromMappedValue:valForMove]) {
-        NSLog(@"Computer is sad. It lost track of the game.");
+        NSLog(@"Computer is confused. :(");
         [self takeAnyTurn];
         return;
     }
@@ -316,10 +390,40 @@ static void *kObservationContext = &kObservationContext;
 {
     NSAssert(row < 3 && col < 3, @"Invalid row/col provided to treeMoveForRow:col:");
     
-    if (self.usingFlippedPerspective) {
-        NSUInteger temp = row;
-        row = col;
-        col = temp;
+    for (NSNumber *val in self.perspectiveTransformations) {
+        T3PerspectiveTransformation transformation = val.unsignedIntegerValue;
+        switch (transformation) {
+            case T3PerspectiveTransformationFlipDiagonally:
+            {
+                NSUInteger temp = row;
+                row = col;
+                col = temp;
+                break;
+            }
+            case T3PerspectiveTransformationFlipHorizontally:
+                col = 2 - col;
+                break;
+            case T3PerspectiveTransformationRotate1:
+            {
+                NSUInteger newRow = col;
+                NSUInteger newCol = 2 - row;
+                row = newRow;
+                col = newCol;
+                break;
+            }
+            case T3PerspectiveTransformationRotate2:
+                row = 2 - row;
+                col = 2 - col;
+                break;
+            case T3PerspectiveTransformationRotate3:
+            {
+                NSUInteger newRow = 2 - col;
+                NSUInteger newCol = row;
+                row = newRow;
+                col = newCol;
+                break;
+            }
+        }
     }
     
     return row * 8 + col;
@@ -333,10 +437,42 @@ static void *kObservationContext = &kObservationContext;
     NSUInteger col = treeMove % 8;
     NSAssert(row < 3 && col < 3, @"Invalid tree move passed to scanTreeMove:yieldingRow:col:");
     
-    if (self.usingFlippedPerspective) {
-        NSUInteger temp = row;
-        row = col;
-        col = temp;
+    // Iterate through the perspective transformations in reverse
+    for (NSUInteger i = self.perspectiveTransformations.count; i > 0; --i) {
+        T3PerspectiveTransformation transformation = [[self.perspectiveTransformations objectAtIndex:(i-1)]
+                                                      unsignedIntegerValue];
+        switch (transformation) {
+            case T3PerspectiveTransformationFlipDiagonally:
+            {
+                NSUInteger temp = row;
+                row = col;
+                col = temp;
+                break;
+            }
+            case T3PerspectiveTransformationFlipHorizontally:
+                col = 2 - col;
+                break;
+            case T3PerspectiveTransformationRotate1:
+            {
+                NSUInteger newRow = 2 - col;
+                NSUInteger newCol = row;
+                row = newRow;
+                col = newCol;
+                break;
+            }
+            case T3PerspectiveTransformationRotate2:
+                row = 2 - row;
+                col = 2 - col;
+                break;
+            case T3PerspectiveTransformationRotate3:
+            {
+                NSUInteger newRow = col;
+                NSUInteger newCol = 2 - row;
+                col = newCol;
+                row = newRow;
+                break;
+            }
+        }
     }
     
     if (pRow) {
@@ -367,29 +503,30 @@ static void *kObservationContext = &kObservationContext;
         [self takeAnyTurn];
         return;
     }
+
+    id (^getResponse)() = ^{
+        NSUInteger moveByOpponent = [self treeMoveForRow:row col:col];
+        id response = [self.nextResponseMap objectForKey:@(moveByOpponent)];
+        if (!response) {
+            response = [self.nextResponseMap objectForKey:[NSNull null]];
+        }
+        return response;
+    };
     
-    NSUInteger moveByOpponent = [self treeMoveForRow:row col:col];
-    id response = [self.nextResponseMap objectForKey:@(moveByOpponent)];
-    
-    if (!response) {
-        response = [self.nextResponseMap objectForKey:[NSNull null]];
+    id response = getResponse();
+    if ([response isKindOfClass:[NSNumber class]]) {
+        // This should be a transofmration command. We want to transform the board
+        //  and then find the response again
+        [self.perspectiveTransformations addObject:response];
+        response = getResponse();
     }
     
-    if (response) {
-        if ([response isKindOfClass:[NSNumber class]]) {
-            // Last turn. It better put us in a good position.
-            if ([self takeTurnFromMappedValue:[response unsignedIntegerValue]]) {
-                self.nextResponseMap = nil;
-                return;
-            }
-        }
-        else if ([response isKindOfClass:[NSArray class]]) {
-            [self takeTurnForTree:response];
-            return;
-        }
+    if ([response isKindOfClass:[NSArray class]]) {
+        [self takeTurnForTree:response];
+        return;
     }
 
-    NSLog(@"Computer is sad. It lost track of the game.");
+    NSLog(@"Computer is confused. :(");
     self.nextResponseMap = nil;
     [self takeAnyTurn];
 }
@@ -398,13 +535,6 @@ static void *kObservationContext = &kObservationContext;
 
 - (void)moveMadeInGame:(NSNotification *)notification
 {
-    NSNumber *playerNumber = [notification.userInfo valueForKey:T3TurnPlayerKey];
-    T3Player player = playerNumber.unsignedIntegerValue;
-    if (player == self.player) {
-        // Ignore plays made by ourself
-        return;
-    }
-    
     NSUInteger row = [[notification.userInfo valueForKey:T3TurnRowKey] unsignedIntegerValue];
     NSUInteger col = [[notification.userInfo valueForKey:T3TurnColKey] unsignedIntegerValue];
     
@@ -412,21 +542,11 @@ static void *kObservationContext = &kObservationContext;
     //  corrections may happen after a human or computer player
     //  made a move in the game.
     
-    if (!self.rotationalPerspectiveEvaluated && (row != 1 || col != 1)) {
-        //TODO:
-        // The first non-center square played determines the extent to which
-        //  we are rotating our perspective.
-    }
-    
-    if (!self.diagonalPerspectiveEvaluated && row != col) {
-        // After applying our rotational perspective,
-        //  the first square played not on the top-left/bottom-right diagonal
-        //  determines whether we are flipping our rows/cols for our perspetive.
-        if (row > col) {
-            self.usingFlippedPerspective = YES;
-        }
-        
-        self.diagonalPerspectiveEvaluated = YES;
+    NSNumber *playerNumber = [notification.userInfo valueForKey:T3TurnPlayerKey];
+    T3Player player = playerNumber.unsignedIntegerValue;
+    if (player == self.player) {
+        // Ignore plays made by ourself
+        return;
     }
     
     // It's the computer's turn.
