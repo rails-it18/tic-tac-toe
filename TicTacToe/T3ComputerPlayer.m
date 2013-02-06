@@ -10,6 +10,7 @@
 
 static void *kObservationContext = &kObservationContext;
 
+// Possible transformations used by the preferred move trees
 typedef enum {
     T3PerspectiveTransformationFlipDiagonally,
     T3PerspectiveTransformationFlipHorizontally,
@@ -18,11 +19,16 @@ typedef enum {
     T3PerspectiveTransformationRotate3
 } T3PerspectiveTransformation;
 
+
 @interface T3ComputerPlayer ()
 
+// The game that the computer is playing
 @property (nonatomic, strong) T3Game *game;
+// The player that the computer is playing as
 @property (nonatomic, readwrite) T3Player player;
 
+// Tracks the next map to be used to determine the move in
+//  response to the opponent's next move.
 @property (nonatomic, strong) NSDictionary *nextResponseMap;
 
 // Tracks whether the game is currently flipping the rows/cols
@@ -57,6 +63,30 @@ typedef enum {
 
 #pragma mark - Static properties
 
+// Possible objects found in move trees:
+// - "Response Map": a dictionary whose keys represent
+//   possible opponent moves*, and whose values are either:
+//   1. An array of size 1, containing only the next move.
+//      If this is the case, the next move should be sufficient
+//      to either win or put the game in a state from which only
+//      a draw is possible.
+//   2. An array of size 2. The first object is the next move,
+//      and the second object is another Response Map.
+//   3. A number. The number represents one of the values
+//      for T3PerspectiveTransformation. When this is encountered,
+//      it means that the perspective of the board should be transformed
+//      as such so that another object from the same response map
+//      may be obtained.
+//   * If [NSNull null] exists as a key in the dictionary, this is
+//      used to indicate "all other moves" by the opponent.
+// - "Move": a move is an NSNumber whose value is an unsigned integer.
+//      The digits in the octal representation of this integer represent
+//      the row and column of the move.
+
+// A move tree for player X, starting with X's first move.
+// This means that the return type is an array, with a move
+//  as the first element and a response map as the second
+//  element.
 + (NSArray *)optimalMoveTreeForPlayerX
 {
     id null = [NSNull null];
@@ -277,6 +307,10 @@ typedef enum {
 - (void)startPlayingGame:(T3Game *)game asPlayer:(T3Player)player
 {
     [self stopPlaying];
+
+    NSAssert(player != T3PlayerNone,
+             @"Computer was asked to play a game as nobody.");
+    
     self.game = game;
     self.player = player;
     
@@ -298,11 +332,13 @@ typedef enum {
     [self.perspectiveTransformations removeAllObjects];
 }
 
+// Takes a turn from the specified mapped value. The value is a move
+//  taken directly from one of the move trees.
 - (BOOL)takeTurnFromMappedValue:(NSUInteger)value
 {
     NSUInteger row = 0;
     NSUInteger col = 0;
-    [self scanTreeMove:value yieldingRow:&row col:&col];
+    [self convertTreeMove:value toRow:&row col:&col];
     
     if ([self.game playerOccupyingRow:row col:col] == T3PlayerNone) {
         [self.game playSquareOnRow:row col:col];
@@ -359,9 +395,6 @@ typedef enum {
 // The provided array should be of the form [ move, response dictionary ]
 - (void)takeTurnForTree:(NSArray *)tree
 {
-    [[tree retain] autorelease];
-    self.nextResponseMap = nil;
-    
     if (tree.count == 0) {
         NSAssert(0, @"Computer is confused. :(");
         [self takeAnyTurn];
@@ -431,11 +464,11 @@ typedef enum {
 
 // Extracts a row and column out of a perspective-corrected move that was
 //  taken from one of the optimal move trees.
-- (void)scanTreeMove:(NSUInteger)treeMove yieldingRow:(NSUInteger *)pRow col:(NSUInteger *)pCol
+- (void)convertTreeMove:(NSUInteger)treeMove toRow:(NSUInteger *)pRow col:(NSUInteger *)pCol
 {
     NSUInteger row = treeMove / 8;
     NSUInteger col = treeMove % 8;
-    NSAssert(row < 3 && col < 3, @"Invalid tree move passed to scanTreeMove:yieldingRow:col:");
+    NSAssert(row < 3 && col < 3, @"Invalid tree move passed to convertTreeMove:toRow:col:");
     
     // Iterate through the perspective transformations in reverse
     for (NSUInteger i = self.perspectiveTransformations.count; i > 0; --i) {
@@ -510,7 +543,9 @@ typedef enum {
         if (!response) {
             response = [self.nextResponseMap objectForKey:[NSNull null]];
         }
-        return response;
+        // We are returning a subtree, so we need to retain this for our use
+        //  in case the parent tree is deallocated.
+        return [[response retain] autorelease];
     };
     
     id response = getResponse();
@@ -521,31 +556,29 @@ typedef enum {
         response = getResponse();
     }
     
+    self.nextResponseMap = nil;
+    
     if ([response isKindOfClass:[NSArray class]]) {
         [self takeTurnForTree:response];
         return;
     }
 
     NSLog(@"Computer is confused. :(");
-    self.nextResponseMap = nil;
     [self takeAnyTurn];
 }
 
 #pragma mark - Game Observing
 
+// Observes moves made in the game, which we then respond to if it's our turn.
 - (void)moveMadeInGame:(NSNotification *)notification
 {
     NSUInteger row = [[notification.userInfo valueForKey:T3TurnRowKey] unsignedIntegerValue];
     NSUInteger col = [[notification.userInfo valueForKey:T3TurnColKey] unsignedIntegerValue];
     
-    // Perspective corrections, if applicable. Note that these
-    //  corrections may happen after a human or computer player
-    //  made a move in the game.
-    
     NSNumber *playerNumber = [notification.userInfo valueForKey:T3TurnPlayerKey];
     T3Player player = playerNumber.unsignedIntegerValue;
     if (player == self.player) {
-        // Ignore plays made by ourself
+        // Ignore our own moves.
         return;
     }
     
