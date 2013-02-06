@@ -8,12 +8,16 @@
 
 #import <Foundation/Foundation.h>
 
+// Possible players that can occupy a square.
 typedef enum {
     T3PlayerNone,
     T3PlayerX,
     T3PlayerO
 } T3Player;
 
+// Posted when a turn was taken in the game.
+//  userInfo contains T3TurnPlayerKey, T3TurnRowKey, and T3TurnColKey,
+//  all unsigned integer values.
 extern NSString *const T3TurnTakenInGameNotification;
 extern NSString *const T3TurnPlayerKey;
 extern NSString *const T3TurnRowKey;
@@ -38,6 +42,7 @@ extern NSString *const T3TurnColKey;
 // This is primarily for testing purposes.
 @property (nonatomic, readonly) NSArray *gameBoard;
 
+// The number of occupied squares in the game.
 @property (nonatomic, readonly) NSUInteger occupiedSquareCount;
 
 // Resets the game.
@@ -47,6 +52,7 @@ extern NSString *const T3TurnColKey;
 //  on behalf of the player whose turn it is.
 - (void)playSquareOnRow:(NSUInteger)row col:(NSUInteger)col;
 
+// Returns the player occupying the square at the specified row and column.
 - (T3Player)playerOccupyingRow:(NSUInteger)row col:(NSUInteger)col;
 
 @end

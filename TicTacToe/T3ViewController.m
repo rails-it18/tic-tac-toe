@@ -52,11 +52,21 @@ static NSUInteger kColCount = 3;
                    context:kObservationContext];
     
     // Initialize the game board buttons.
+    // These buttons are "custom" and they have no border.
+    // They act as hot spots overlayed on top of the game
+    //  board image for taking turns.
+    // They also display the current player at the square
+    //  as @"X" or @"O", if applicable.
     NSMutableArray *boardButtons = [NSMutableArray array];
     for (NSUInteger i = 0; i < kRowCount * kColCount; ++i) {
+        
         UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
         [button setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
         button.titleLabel.font = [UIFont boldSystemFontOfSize:48.0];
+        
+        // The button's tag is equal to row * 3 + col.
+        // We'll use this to position it and to recognize
+        //  the user tapping on it.
         button.tag = i;
         
         [button addTarget:self
@@ -77,11 +87,14 @@ static NSUInteger kColCount = 3;
 - (void)viewDidLayoutSubviews
 {
     [super viewDidLayoutSubviews];
-    
+
+    // Position the buttons in the view.
     CGFloat buttonWidth = self.gameBoardView.bounds.size.width / kColCount;
     CGFloat buttonHeight = self.gameBoardView.bounds.size.height / kRowCount;
     
     for (UIButton *button in self.gameBoardButtons) {
+        // Extract the row and column from the button tag.
+        // This determines its location.
         NSUInteger row = button.tag / kColCount;
         NSUInteger col = button.tag % kColCount;
         
@@ -115,6 +128,7 @@ static NSUInteger kColCount = 3;
 
 #pragma mark - Game UI
 
+// Refreshes the entire board UI, one square at a time.
 - (void)refreshBoard
 {
     for (NSUInteger row = 0; row < kRowCount; ++row) {
@@ -124,6 +138,7 @@ static NSUInteger kColCount = 3;
     }
 }
 
+// Refreshes a square's display at the specified row and column.
 - (void)refreshSquareAtRow:(NSUInteger)row col:(NSUInteger)col
 {
     NSUInteger index = row * kColCount + col;
@@ -143,6 +158,7 @@ static NSUInteger kColCount = 3;
     [button setTitle:title forState:UIControlStateNormal];
 }
 
+// Called when a button on the board is tapped.
 - (void)boardButtonTapped:(id)sender
 {
     if (![sender isKindOfClass:[UIButton class]]) {
@@ -151,7 +167,7 @@ static NSUInteger kColCount = 3;
     }
     
     if (self.game.currentPlayer == self.computerPlayer.player) {
-        // It's the computer's turn.
+        // It's the computer's turn. Do nothing.
         return;
     }
     
@@ -160,23 +176,25 @@ static NSUInteger kColCount = 3;
     NSUInteger col = button.tag % kColCount;
     
     if ([self.game playerOccupyingRow:row col:col]) {
+        // Don't try to play the square if it's already occupied.
         return;
     }
     
     [self.game playSquareOnRow:row col:col];
 }
 
+// Starts a human vs. human game.
 - (void)startHumanHumanGame
 {
     [self.computerPlayer stopPlaying];
     [self.game resetGame];
 }
 
+// Starts a human vs. computer game
 - (void)startHumanComputerGameWithComputerAsPlayer:(T3Player)computerPlayer;
 {
     [self.computerPlayer stopPlaying];
     [self.game resetGame];
-    [self refreshBoard];
     [self.computerPlayer startPlayingGame:self.game asPlayer:computerPlayer];
 }
 
@@ -232,7 +250,6 @@ static NSUInteger kColCount = 3;
 {
     // The only way this can be called is if the user tapped the "New Game" button in an alert view.
     [self.game resetGame];
-    [self refreshBoard];
     
     T3Player computerPlayer = (buttonIndex == 0) ? T3PlayerO : T3PlayerX;
     [self startHumanComputerGameWithComputerAsPlayer:computerPlayer];
