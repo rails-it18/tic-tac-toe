@@ -89,11 +89,12 @@ NSString *const T3TurnColKey = @"T3TurnColKey";
     }
     
     if (self.currentPlayer == T3PlayerNone) {
-        NSAssert(0, @"Attempted to play a square when there is no current player.");
+        NSLog(@"Attempted to play a square when there is no current player.");
+        return;
     }
 
     if (_board[row][col] != T3PlayerNone) {
-        NSAssert(0, @"Attempted to play a square that has already been played.");
+        NSLog(@"Attempted to play a square that has already been played.");
         return;
     }
     
